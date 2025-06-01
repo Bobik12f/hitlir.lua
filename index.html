@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Hitlir.lua - Лучший Lua для Gamesense</title>
+<style>
+  body {
+    margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #1b1b1b; color: #fff;
+  }
+  header {
+    background: #b30000; padding: 20px; text-align: center; font-size: 24px; font-weight: bold;
+    user-select: none;
+  }
+  nav {
+    display: flex; justify-content: center; background: #2e0000;
+  }
+  nav button {
+    background: none; border: none; color: #fff; padding: 15px 25px; cursor: pointer;
+    font-size: 16px; transition: background 0.3s;
+  }
+  nav button:hover, nav button.active {
+    background: #b30000;
+  }
+  main {
+    padding: 20px; max-width: 900px; margin: 0 auto;
+  }
+  .hidden { display: none; }
+  button.primary {
+    background: #b30000; border: none; padding: 10px 20px;
+    color: #fff; cursor: pointer; font-weight: bold;
+    border-radius: 5px; transition: background 0.3s;
+  }
+  button.primary:hover {
+    background: #d00000;
+  }
+  input, select, textarea {
+    background: #2e0000; border: 1px solid #b30000; color: #fff;
+    padding: 8px; margin-bottom: 10px; width: 100%; border-radius: 3px;
+  }
+  label {
+    font-weight: bold; display: block; margin-top: 10px;
+  }
+  table {
+    width: 100%; border-collapse: collapse; margin-top: 10px;
+  }
+  th, td {
+    border: 1px solid #b30000; padding: 8px; text-align: left;
+  }
+  th {
+    background: #b30000;
+  }
+  .ban {
+    color: #ff4c4c;
+    font-weight: bold;
+  }
+  .subscription-active {
+    color: #00ff00;
+    font-weight: bold;
+  }
+</style>
+</head>
+<body>
+<header>Hitlir.lua - Лучший Lua для Gamesense</header>
+<nav>
+  <button id="navHome" class="active">Главная</button>
+  <button id="navChangeLog">ChangeLog</button>
+  <button id="navProfile">Профиль</button>
+  <button id="navAdmin" style="display:none;">Админ</button>
+</nav>
+<main>
+  <!-- Главная -->
+  <section id="sectionHome">
+    <h2>Добро пожаловать!</h2>
+    <p>Hitlir.lua — самая лучшая LUA для Gamesense. Купить подписку и получить доступ к скачиванию можно ниже.</p>
+    <button class="primary" id="buyLuaBtn">Купить Lua</button>
+  </section>
+
+  <!-- ChangeLog -->
+  <section id="sectionChangeLog" class="hidden">
+    <h2>ChangeLog</h2>
+    <pre id="changeLogText" style="white-space: pre-wrap; background:#2e0000; padding:10px; border-radius:5px; max-height: 300px; overflow-y:auto;">
+Здесь будет твой текст ChangeLog. Пришли его мне, я вставлю.
+    </pre>
+  </section>
+
+  <!-- Профиль -->
+  <section id="sectionProfile" class="hidden">
+    <h2>Профиль</h2>
+    <div id="authBlock">
+      <label>Никнейм:</label>
+      <input type="text" id="inputNickname" placeholder="Введите ник" />
+      <button class="primary" id="btnLogin">Войти</button>
+    </div>
+    <div id="profileInfo" class="hidden">
+      <p><b>Ник:</b> <span id="profileNickname"></span></p>
+      <p><b>Статус подписки:</b> <span id="profileSubStatus"></span></p>
+      <p><b>Статус бана:</b> <span id="profileBanStatus"></span></p>
+      <button class="primary" id="btnLogout">Выйти</button>
+      <h3>Скачать Lua</h3>
+      <button class="primary" id="btnDownloadLua">Скачать Hitlir.lua</button>
+    </div>
+  </section>
+
+  <!-- Админ панель -->
+  <section id="sectionAdmin" class="hidden">
+    <h2>Админ панель</h2>
+    <div>
+      <h3>Пользователи</h3>
+      <table id="usersTable">
+        <thead>
+          <tr>
+            <th>Ник</th>
+            <th>Подписка</th>
+            <th>Бан</th>
+            <th>Причина бана</th>
+            <th>Действия</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Данные подгружаются -->
+        </tbody>
+      </table>
+      <h3>Добавить/Обновить пользователя</h3>
+      <label>Никнейм</label>
+      <input type="text" id="adminUserNick" placeholder="Ник пользователя" />
+      <label>Подписка навсегда</label>
+      <select id="adminUserSub">
+        <option value="false">Нет</option>
+        <option value="true">Да</option>
+      </select>
+      <label>Забанить пользователя</label>
+      <select id="adminUserBan">
+        <option value="false">Нет</option>
+        <option value="true">Да</option>
+      </select>
+      <label>Причина бана</label>
+      <input type="text" id="adminBanReason" placeholder="Причина бана (если бан)" />
+      <button class="primary" id="adminSaveUser">Сохранить</button>
+    </div>
+  </section>
+</main>
+
+<script>
+  // Переменные для элементов
+  const navHome = document.getElementById('navHome');
+  const navChangeLog = document.getElementById('navChangeLog');
+  const navProfile = document.getElementById('navProfile');
+  const navAdmin = document.getElementById('navAdmin');
+
+  const sectionHome = document.getElementById('sectionHome');
+  const sectionChangeLog = document.getElementById('sectionChangeLog');
+  const sectionProfile = document.getElementById('sectionProfile');
+  const sectionAdmin = document.getElementById('sectionAdmin');
+
+  const buyLuaBtn = document.getElementById('buyLuaBtn');
+  const inputNickname = document.getElementById('inputNickname');
+  const btnLogin = document.getElementById('btnLogin');
+  const profileInfo = document.getElementById('profileInfo');
+  const authBlock = document.getElementById('authBlock');
+  const profileNickname = document.getElementById('profileNickname');
+  const profileSubStatus = document.getElementById('profileSubStatus');
+  const profileBanStatus = document.getElementById('profileBanStatus');
+  const btnLogout = document.getElementById('btnLogout');
+  const btnDownloadLua = document.getElementById('btnDownloadLua');
+
+  const usersTableBody = document.querySelector('#usersTable tbody');
+  const adminUserNick = document.getElementById('adminUserNick');
+  const adminUserSub = document.getElementById('adminUserSub');
+  const adminUserBan = document.getElementById('adminUserBan');
+  const adminBanReason = document.getElementById('adminBanReason');
+  const adminSaveUser = document.getElementById('adminSaveUser');
+
+  // Твоя ссылка на покупку Lua
+  const luaBuyLink = "https://твоя-ссылка-на-покупку.ru"; // <- замени на свою ссылку
+
+  // Ссылка для скачивания Lua (можно заменить на реальный файл)
+  const luaDownloadLink = "https://example.com/Hitlir.lua"; // <- замени на реальную ссылку на файл
+
+  // Инициализация данных пользователей в localStorage
+  function loadUsers() {
+    const usersJSON = localStorage.getItem('users');
+    if (usersJSON) return JSON.parse(usersJSON);
+    else return {};
+  }
+
+  function saveUsers(users) {
+    localStorage.setItem('users', JSON.stringify(users));
+  }
+
+  // Текущий залогиненный пользователь
+  let currentUser = localStorage.getItem('currentUser') || null;
+
+  // Проверка — админ ли пользователь? Для простоты — ник "admin"
+  function isAdmin(nick) {
+    return nick && nick.toLowerCase() === 'admin';
+  }
+
+  // Обновить отображение меню и секций
+  function showSection(section) {
+    // Убрать класс active у всех кнопок
+    [navHome, navChangeLog, navProfile, navAdmin].forEach(btn => btn.classList.remove('active'));
+    // Скрыть все секции
+    [sectionHome, sectionChangeLog, sectionProfile, sectionAdmin].forEach(sec => sec.classList.add('hidden'));
+
+    if(section === 'home') {
+      navHome.classList.add('active');
+      sectionHome.classList.remove('hidden');
+    } else if(section === 'changelog') {
+      navChangeLog.classList.add('active');
+      sectionChangeLog.classList.remove('hidden');
+    } else if(section === 'profile') {
+      navProfile.classList.add('active');
+      sectionProfile.classList.remove('hidden');
+    } else if(section === 'admin') {
+      navAdmin.classList.add('active');
+      sectionAdmin.classList.remove('hidden');
+    }
+  }
+
+  // Обновить профиль после логина
+  function updateProfile() {
+    if (!currentUser) {
+      authBlock.style.display = 'block';
+      profileInfo.classList.add('hidden');
+      navAdmin.style.display = 'none';
+      return;
+    }
+    const users = loadUsers();
+    const user = users[currentUser] || { subscription: false, banned: false, banReason: "" };
+
+    profileNickname.textContent = currentUser;
+    profileSubStatus.textContent = user.subscription ? "Подписка активна" : "Нет подписки";
+    profileSubStatus.className = user.subscription ? "subscription-active" : "";
+    profileBanStatus.textContent = user.banned ? "Забанен" : "Не забанен";
+    profileBanStatus.className = user.banned ? "ban" : "";
+
+    authBlock.style.display = 'none';
+    profileInfo.classList.remove('hidden');
+
+    // Показать админ меню если админ
+    if (isAdmin(currentUser)) {
+      navAdmin.style.display = 'inline-block';
+    } else {
+      navAdmin.style.display = 'none';
+    }
+  }
+
+  // Обновить таблицу пользователей в админке
+  function updateUsersTable() {
+    const users = loadUsers();
+    usersTableBody.innerHTML = "";
+    for (const nick in users) {
+      const user = users[nick];
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${nick}</td>
+        <td>${user.subscription ? "Да" : "Нет"}</td>
+        <td>${user.banned ? "Да" : "Нет"}</td>
+        <td>${user.banReason || ""}</td>
+        <td>
+          <button onclick="editUser('${nick}')">Редактировать</button>
+          <button onclick="deleteUser('${nick}')">Удалить</button>
+        </td>
+      `;
+      usersTableBody.appendChild(tr);
+    }
+  }
+
+  // Редактирование пользователя в админке
+  window.editUser = function(nick) {
+    const users = loadUsers();
+    if (!users[nick]) return alert("Пользователь не найден");
+    adminUserNick.value = nick;
+    adminUserSub.value = users[nick].subscription ? "true" : "false";
+    adminUserBan.value = users[nick].banned ? "true" : "false";
+    adminBanReason.value = users[nick].banReason || "";
+  }
+
+  // Удаление пользователя из базы
+  window.deleteUser = function(nick) {
+    if (!confirm(`Удалить пользователя ${nick}?`)) return;
+    const users = loadUsers();
+    delete users[nick];
+    saveUsers(users);
+    updateUsersTable();
+    alert("Пользователь удалён");
+  }
+
+  // Сохранение пользователя в админке
+  adminSaveUser.onclick = () => {
+    const nick = adminUserNick.value.trim();
+    if (!nick) return alert("Введите ник пользователя");
+    const subscription = adminUserSub.value === "true";
+    const banned = adminUserBan.value === "true";
+    const banReason = adminBanReason.value.trim();
+
+    const users = loadUsers();
+    users[nick] = { subscription, banned, banReason };
+    saveUsers(users);
+    updateUsersTable();
+    alert("Пользователь сохранён");
+    // Очистить форму
+    adminUserNick.value = "";
+    adminUserSub.value = "false";
+    adminUserBan.value = "false";
+    adminBanReason.value = "";
+  };
+
+  // Кнопка купить Lua
+  buyLuaBtn.onclick = () => {
+    window.open(luaBuyLink, '_blank');
+  };
+
+  // Авторизация (логин)
+  btnLogin.onclick = () => {
+    const nick = inputNickname.value.trim();
+    if (!nick) return alert("Введите ник");
+    currentUser = nick;
+    localStorage.setItem('currentUser', currentUser);
+
+    // Если пользователя нет, создаём с дефолтными параметрами
+    const users = loadUsers();
+    if (!users[nick]) {
+      users[nick] = { subscription: false, banned: false, banReason: "" };
+      saveUsers(users);
+    }
+    updateProfile();
+    alert(`Добро пожаловать, ${nick}!`);
+  };
+
+  btnLogout.onclick = () => {
+    currentUser = null;
+    localStorage.removeItem('currentUser');
+    updateProfile();
+  };
+
+  btnDownloadLua.onclick = () => {
+    const users = loadUsers();
+    const user = users[currentUser];
+    if (!user || !user.subscription) {
+      alert("У вас нет подписки для скачивания Lua.");
+      return;
+    }
+    if(user.banned) {
+      alert(`Вы забанены. Причина: ${user.banReason}`);
+      return;
+    }
+    window.open(luaDownloadLink, '_blank');
+  };
+
+  // Навигация
+  navHome.onclick = () => showSection('home');
+  navChangeLog.onclick = () => showSection('changelog');
+  navProfile.onclick = () => {
+    showSection('profile');
+    updateProfile();
+  };
+  navAdmin.onclick = () => {
+    showSection('admin');
+    updateUsersTable();
+  };
+
+  // При загрузке страницы
+  window.onload = () => {
+    updateProfile();
+    showSection('home');
+  };
+</script>
+</body>
+</html>
